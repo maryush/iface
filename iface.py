@@ -98,6 +98,8 @@ CMDS={
     "iface-ping"    : "CMD_ping",       # Returns "pong"
     "iface-openurl" : "CMD_openurl",    # Opens http or https url.
     "iface-l-cmd"   : "CMD_l_cmd",      # Spawns a linux console.
+    "iface-l-run"   : "CMD_l_run",      # Run linux command
+    "iface-l-runt"  : "CMD_l_runt",     # Run linux command in terminal
     "translate-path": "CMD_translate_path", # Translates path.
     }
 
@@ -1475,6 +1477,33 @@ def CMD_l_cmd(info, cwd):
   else:
     return "0"
 
+# CMD_l_run
+def CMD_l_run(info, cmd):
+  global IFACE
+
+  if IFACE == IFACE_HOST:
+    return Invoke(IFACE_VM, "iface-l-run", cmd)
+
+  command = "(%s &)" % cmd
+
+  if subprocess.call(command, shell=True) == 0:
+    return "1"
+  else:
+    return "0"
+
+# CMD_l_runt
+def CMD_l_runt(info, cmd):
+  global IFACE
+
+  if IFACE == IFACE_HOST:
+    return Invoke(IFACE_VM, "iface-l-runt", cmd)
+
+  command = "(%s -e %s &)" % (TERMINAL_CMD, cmd)
+
+  if subprocess.call(command, shell=True) == 0:
+    return "1"
+  else:
+    return "0"
 # -------------------------------------------------------------------
 # Everything else is in main.
 sys.exit(Main())
