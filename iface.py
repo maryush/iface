@@ -99,7 +99,7 @@ CMDS={
     "iface-openurl" : "CMD_openurl",    # Opens http or https url.
     "iface-l-cmd"   : "CMD_l_cmd",      # Spawns a linux console.
     "iface-l-run"   : "CMD_l_run",      # Run linux command
-    "iface-l-runt"  : "CMD_l_runt",      # Run linux command in terminal
+    "iface-l-runt"  : "CMD_l_runt",     # Run linux command in terminal
     "translate-path": "CMD_translate_path", # Translates path.
     }
 
@@ -1478,16 +1478,15 @@ def CMD_l_cmd(info, cwd):
     return "0"
 
 # CMD_l_run
-def CMD_l_run(info, cmd, *args):
+def CMD_l_run(info, cwd, cmd, *args):
   global IFACE
-  cwd = None
 
   # If we are the HOST, we don't handle this.
   if IFACE == IFACE_HOST:
-    return Invoke(IFACE_VM, "iface-l-run", cmd, args)
+    return Invoke(IFACE_VM, "iface-l-run", cwd, cmd, args)
 
-  if len(args) > 0:
-   cwd = args[0][0]
+  if len(args) == 0:
+    args = ""
 
   # If this is not a linux cwd, we need to convert it.
   if cwd[0] != '/':
@@ -1499,8 +1498,9 @@ def CMD_l_run(info, cmd, *args):
 
   # Spawn the terminal.
   cwd = cwd.replace("'", "\\'")
-  command = "(cd '%s'; %s &)" % (cwd, cmd)
-
+  args = " ".join(str(i[0]) for i in args)
+  command = "(cd '%s'; %s %s &)" % (cwd, cmd, args)
+  
   # Spawn.
   if subprocess.call(command, shell=True) == 0:
     # subprocess.call by default returns 0 with process success return code.
@@ -1511,16 +1511,15 @@ def CMD_l_run(info, cmd, *args):
     return "0"
 
 # CMD_l_runt
-def CMD_l_runt(info, cmd, *args):
+def CMD_l_runt(info, cwd, cmd, *args):
   global IFACE
-  cwd = None
 
   # If we are the HOST, we don't handle this.
   if IFACE == IFACE_HOST:
-    return Invoke(IFACE_VM, "iface-l-runt", cmd, args)
+    return Invoke(IFACE_VM, "iface-l-runt", cwd, cmd, args)
 
-  if len(args) > 0:
-   cwd = args[0][0]
+  if len(args) == 0:
+    args = ""
 
   # If this is not a linux cwd, we need to convert it.
   if cwd[0] != '/':
@@ -1532,7 +1531,8 @@ def CMD_l_runt(info, cmd, *args):
 
   # Spawn the terminal.
   cwd = cwd.replace("'", "\\'")
-  command = "(cd '%s'; %s -e %s &)" % (cwd, TERMINAL_CMD, cmd)
+  args = " ".join(str(i[0]) for i in args)
+  command = "(cd '%s'; %s -e '%s %s' &)" % (cwd, TERMINAL_CMD, cmd, args)
   
   # Spawn.
   if subprocess.call(command, shell=True) == 0:
@@ -1542,6 +1542,7 @@ def CMD_l_runt(info, cmd, *args):
     return "1"
   else:
     return "0"
+
 # -------------------------------------------------------------------
 # Everything else is in main.
 sys.exit(Main())

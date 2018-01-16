@@ -9,11 +9,12 @@ import ifaceclientlib, sys, os
 ifaceclientlib.LOG_LEVEL = ifaceclientlib.LOG_WARNING
 
 # Check args.
-if len(sys.argv) != 2:
-  print "usage: if-l-runt.py <cmd>"
+if len(sys.argv) < 2:
+  print "usage: if-l-runt.py <cmd> <args>"
   sys.exit(1)
 
 # Invoke.
-cmd = sys.argv[1]
+cmd = sys.argv[1] 
+args = " ".join(sys.argv[2:])
 cwd = ifaceclientlib.Invoke("translate-path", os.getcwd())
-print ifaceclientlib.Invoke("iface-l-runt", cmd, cwd)
+print ifaceclientlib.Invoke("iface-l-runt", cwd, cmd, args)
