@@ -5,7 +5,7 @@
 # WARNING: The Windows/Linux iface by is EXPERIMENTAL and has nothing to do
 #          with good coding, security, etc. USE AT YOUR OWN RISK.
 #
-import ifaceclientlib, sys
+import ifaceclientlib, sys, os
 ifaceclientlib.LOG_LEVEL = ifaceclientlib.LOG_WARNING
 
 # Check args.
@@ -15,6 +15,5 @@ if len(sys.argv) != 2:
 
 # Invoke.
 cmd = sys.argv[1]
-print ifaceclientlib.Invoke("iface-l-runt", cmd)
-
-
+cwd = ifaceclientlib.Invoke("translate-path", os.getcwd())
+print ifaceclientlib.Invoke("iface-l-runt", cmd, cwd)

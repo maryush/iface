@@ -99,7 +99,7 @@ CMDS={
     "iface-openurl" : "CMD_openurl",    # Opens http or https url.
     "iface-l-cmd"   : "CMD_l_cmd",      # Spawns a linux console.
     "iface-l-run"   : "CMD_l_run",      # Run linux command
-    "iface-l-runt"  : "CMD_l_runt",     # Run linux command in terminal
+    "iface-l-runt"  : "CMD_l_runt",      # Run linux command in terminal
     "translate-path": "CMD_translate_path", # Translates path.
     }
 
@@ -1478,29 +1478,67 @@ def CMD_l_cmd(info, cwd):
     return "0"
 
 # CMD_l_run
-def CMD_l_run(info, cmd):
+def CMD_l_run(info, cmd, *args):
   global IFACE
+  cwd = None
 
+  # If we are the HOST, we don't handle this.
   if IFACE == IFACE_HOST:
-    return Invoke(IFACE_VM, "iface-l-run", cmd)
+    return Invoke(IFACE_VM, "iface-l-run", cmd, args)
 
-  command = "(%s &)" % cmd
+  if len(args) > 0:
+   cwd = args[0][0]
 
+  # If this is not a linux cwd, we need to convert it.
+  if cwd[0] != '/':
+    cwd = Invoke(IFACE_HOST, "translate-path", cwd)
+
+    # Default?
+    if not cwd:
+      cwd = HOME_PATH_ON_VM
+
+  # Spawn the terminal.
+  cwd = cwd.replace("'", "\\'")
+  command = "(cd '%s'; %s &)" % (cwd, cmd)
+
+  # Spawn.
   if subprocess.call(command, shell=True) == 0:
+    # subprocess.call by default returns 0 with process success return code.
+    # Unfortunately, ifaceclientlib will understand such status as a false and
+    # will thrown an exception as a result.
     return "1"
   else:
     return "0"
 
 # CMD_l_runt
-def CMD_l_runt(info, cmd):
+def CMD_l_runt(info, cmd, *args):
   global IFACE
+  cwd = None
 
+  # If we are the HOST, we don't handle this.
   if IFACE == IFACE_HOST:
-    return Invoke(IFACE_VM, "iface-l-runt", cmd)
+    return Invoke(IFACE_VM, "iface-l-runt", cmd, args)
 
-  command = "(%s -e %s &)" % (TERMINAL_CMD, cmd)
+  if len(args) > 0:
+   cwd = args[0][0]
 
+  # If this is not a linux cwd, we need to convert it.
+  if cwd[0] != '/':
+    cwd = Invoke(IFACE_HOST, "translate-path", cwd)
+
+    # Default?
+    if not cwd:
+      cwd = HOME_PATH_ON_VM
+
+  # Spawn the terminal.
+  cwd = cwd.replace("'", "\\'")
+  command = "(cd '%s'; %s -e %s &)" % (cwd, TERMINAL_CMD, cmd)
+  
+  # Spawn.
   if subprocess.call(command, shell=True) == 0:
+    # subprocess.call by default returns 0 with process success return code.
+    # Unfortunately, ifaceclientlib will understand such status as a false and
+    # will thrown an exception as a result.
     return "1"
   else:
     return "0"
